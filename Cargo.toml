@@ -1,0 +1,13 @@
+[package]
+name = "cloud-notepad"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+eframe = "0.31"
+egui = "0.31"
+rusqlite = { version =  "0.36", features = ["bundled"] }
+serde = { version = "1.0", features = ["derive"] }
+chrono = { version = "0.4", features = ["serde"] }
+uuid = { version = "1.17", features = ["v4", "serde"] }
+serde_json = "1.0"
