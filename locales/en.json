@@ -1,0 +1,10 @@
+{
+    "ui": {
+        "death note": "Death Note",
+        "add_note": "Add Note",
+        "delete note": "Delete Note",
+        "words": "words",
+        "last updated at": "last updated at",
+        "please select a note from the sidebar or create a new note": "Please select a note from the sidebar or create a new note"
+    }
+}

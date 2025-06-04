@@ -8,7 +8,9 @@ pub struct NoteEditor {
 }
 
 impl NoteEditor {
-    pub fn show(&mut self, ui: &mut egui::Ui, note: &mut Note) {
+    pub fn show(&mut self, ui: &mut egui::Ui, state: &mut AppState) {
+        let mut note = state.current_note().unwrap();
+
         // 标题编辑区域
         ui.horizontal(|ui| {
             if self.is_editing_title {
@@ -51,10 +53,12 @@ impl NoteEditor {
         // 状态栏
         ui.separator();
         ui.horizontal(|ui| {
-            ui.label("words: ");
+            ui.label(format!("{}: ", state.t("words")));
             ui.label(note.content.chars().count().to_string());
-            ui.label("last updated at: ");
+            ui.label(format!("{}: ", state.t("last updated at")));
             ui.label(note.updated_at.format("%Y-%m-%d %H:%M").to_string());
         });
+
+        state.update_note(note).unwrap();
     }
 }

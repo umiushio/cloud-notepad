@@ -1,7 +1,5 @@
-use anyhow::Ok;
-
 use super::*;
-
+use anyhow::Ok;
 use std::{collections::HashSet, sync::{Arc, Mutex}};
 
 
@@ -11,6 +9,7 @@ pub struct AppState {
     pub(crate) current_note_id: Option<String>,
     pub(crate) dark_mode: bool,
     modified_notes: Mutex<HashSet<String>>,
+    pub(crate) current_language: Language,
 }
 
 impl AppState {
@@ -25,6 +24,7 @@ impl AppState {
             current_note_id: None,
             dark_mode: true,
             modified_notes: Mutex::new(HashSet::new()),
+            current_language: Language::English,
         })
     }
 
@@ -124,7 +124,7 @@ impl AppState {
             self.current_note_id = None;
         }
         self.unmark_note_modified(note_id);
-        
+
         Ok(())
     }
 
@@ -135,5 +135,10 @@ impl AppState {
         } else {
             Ok(())
         }
+    }
+
+    /// 文本转换
+    pub fn t(&self, key: &str) -> String {
+        i18n::t(key, self.current_language)
     }
 }

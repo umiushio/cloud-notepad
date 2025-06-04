@@ -1,0 +1,10 @@
+{
+    "ui": {
+        "death note": "死亡笔记",
+        "add_note": "新建笔记",
+        "delete note": "删除笔记",
+        "words": "字数",
+        "last updated at": "最后更新于",
+        "please select a note from the sidebar or create a new note": "请从侧边栏中选择笔记或创建新笔记"
+    }
+}

@@ -632,6 +632,7 @@ dependencies = [
  "chrono",
  "eframe",
  "egui",
+ "once_cell",
  "rusqlite",
  "serde",
  "serde_json",

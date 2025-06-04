@@ -7,3 +7,6 @@ pub use data::model::{Note, Notebook};
 
 pub mod ui;
 pub use ui::app::NoteApp;
+
+pub mod utils;
+pub use utils::i18n;

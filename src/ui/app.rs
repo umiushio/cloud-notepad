@@ -1,4 +1,6 @@
 use super::*;
+use std::sync::Arc;
+use egui::{FontData, FontDefinitions, FontFamily};
 
 pub struct NoteApp {
     state: AppState,
@@ -14,10 +16,38 @@ impl NoteApp {
             cc.egui_ctx.set_visuals(egui::Visuals::dark());
         }
 
+        // 设置字体
+        Self::setup_fonts(&cc.egui_ctx);
+
         Ok(Self {
             state,
             main_window: MainWindow::default(),
         })
+    }
+
+    fn setup_fonts(ctx: &egui::Context) {
+        let mut fonts = FontDefinitions::default();
+
+        // 添加其他语言字体
+        fonts.font_data.insert(
+            "source_han_sans".to_owned(), 
+            Arc::new(FontData::from_static(include_bytes!("../../assets/fonts/SourceHanSans-VF.otf.ttc")))
+        );
+
+        // 修改字体族配置
+        fonts
+            .families
+            .entry(egui::FontFamily::Proportional)
+            .or_default()
+            .insert(0, "source_han_sans".to_owned());
+
+        fonts
+            .families
+            .entry(FontFamily::Monospace)
+            .or_default()
+            .extend(vec!["source_han_sans".to_owned()]);
+
+        ctx.set_fonts(fonts);
     }
 }
 

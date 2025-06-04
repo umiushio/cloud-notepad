@@ -1,0 +1,10 @@
+{
+    "ui": {
+        "death note": "デスノート",
+        "add_note": "新規ノート",
+        "delete note": "削除ノート",
+        "words": "文字数",
+        "last updated at": "最終更新日時",
+        "please select a note from the sidebar or create a new note": "サイドバーからノートを選択するか、新しいノートを作成してください"
+    }
+}

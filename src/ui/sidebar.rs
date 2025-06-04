@@ -7,7 +7,7 @@ pub struct NoteSidebar {
 
 impl NoteSidebar {
     pub fn show(&mut self, ui: &mut egui::Ui, state: &mut AppState) {
-        ui.heading("Death Note");
+        ui.heading(&state.t("death note"));
 
         // 搜索框
         ui.horizontal(|ui| {
@@ -16,7 +16,7 @@ impl NoteSidebar {
         });
 
         // 新建笔记按钮
-        if ui.button("➕ new note").clicked() {
+        if ui.button(format!("➕ {}", state.t("add note"))).clicked() {
             state.create_note().unwrap();
         }
 
@@ -24,6 +24,7 @@ impl NoteSidebar {
 
         // 笔记列表
         let mut to_delete = None;
+        let delete_text = &state.t("delete note");
         {
             let notebook = state.notebook.lock().unwrap();
             egui::ScrollArea::vertical().show(ui, |ui| {
@@ -42,7 +43,7 @@ impl NoteSidebar {
 
                             // 删除按钮（只在选中时显示）
                             if is_selected {
-                                if ui.button("🗑").on_hover_text("delete note").clicked() {
+                                if ui.button("🗑").on_hover_text(delete_text).clicked() {
                                     to_delete = Some(note.id.clone());
                                 }
                             }
