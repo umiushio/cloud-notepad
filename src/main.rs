@@ -1,11 +1,11 @@
-use cloud_notepad::ui::app::NoteApp;
+use cloud_notepad::NoteApp;
 
-fn main() -> Result<(), eframe::Error> {
+fn main() -> eframe::Result<()> {
     let options = eframe::NativeOptions::default();
 
     eframe::run_native(
         "Cloud Notepad", 
         options, 
-        Box::new(|cc| Ok(Box::new(NoteApp::new(cc)))),
+        Box::new(|cc| Ok(Box::new(NoteApp::new(cc)?))),
     )
 }

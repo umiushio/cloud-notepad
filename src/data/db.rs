@@ -3,14 +3,12 @@ use rusqlite::{Connection, Result, Transaction};
 use super::*;
 use crate::{Note, Notebook};
 
-pub type DbResult<T> = Result<T>;
-
 pub struct Database {
     connection: Connection,
 }
 
 impl Database {
-    pub fn new() -> DbResult<Self> {
+    pub fn new() -> Result<Self> {
         let connection = Connection::open("notes.db")?;
         connection.execute(
             "CREATE TABLE IF NOT EXISTS notes (
@@ -27,7 +25,7 @@ impl Database {
         Ok( Self { connection } )
     } 
 
-    pub fn load_all_notes(&self) -> DbResult<Notebook> {
+    pub fn load_all_notes(&self) -> Result<Notebook> {
         let mut stmt = self.connection.prepare(
             "SELECT id, title, content, tags, created_at, updated_at, is_pinned FROM notes"
         )?;
@@ -56,7 +54,7 @@ impl Database {
     fn insert_or_replace_note(
         tx: &Transaction,
         note: &Note,
-    ) -> DbResult<()> {
+    ) -> Result<()> {
         tx.execute(
             "INSERT OR REPLACE INTO notes
             (id, title, content, tags, created_at, updated_at, is_pinned)
@@ -74,17 +72,26 @@ impl Database {
         Ok(())
     }
 
-    pub fn save_note(&mut self, note: &Note) -> DbResult<()> {
+    pub fn save_note(&mut self, note: &Note) -> Result<()> {
         let tx = self.connection.transaction()?;
         Self::insert_or_replace_note(&tx, note)?;
         tx.commit()
     }
 
-    pub fn save_notebook(&mut self, notebook: &Notebook) -> DbResult<()> {
+    pub fn save_notebook(&mut self, notebook: &Notebook) -> Result<()> {
         let tx = self.connection.transaction()?;
         for note in notebook.notes.values() {
             Self::insert_or_replace_note(&tx, note)?;
         }
         tx.commit()
-    }   
+    }
+
+    pub fn delete_note(&mut self, note_id: &str) -> Result<()> {
+        let tx = self.connection.transaction()?;
+        tx.execute(
+            "DELETE FROM notes WHERE id = ?1", 
+            [note_id]
+        )?;
+        tx.commit()
+    }
 }
