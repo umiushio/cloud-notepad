@@ -1,4 +1,4 @@
-use cloud_notepad::app::NoteApp;
+use cloud_notepad::ui::app::NoteApp;
 
 fn main() -> Result<(), eframe::Error> {
     let options = eframe::NativeOptions::default();

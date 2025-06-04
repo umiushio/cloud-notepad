@@ -1,8 +1,4 @@
-use eframe::egui;
-
-pub mod state;
-use state::AppState;
-use crate::data::model::Note;
+use super::*;
 
 pub struct NoteApp {
     state: AppState,
@@ -19,11 +15,13 @@ impl NoteApp {
 impl eframe::App for NoteApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.heading("Cloud Notepad");
+            ui.heading("My Cloud Notes");
 
             // 临时显示笔记数量
-            let notebook = self.state.notebook.lock().unwrap();
-            ui.label(format!("Total notes: {}", notebook.notes.len()));
+            {
+                let notebook = self.state.notebook.lock().unwrap();
+                ui.label(format!("Total notes: {}", notebook.notes.len()));
+            }
 
             // 添加新笔记按钮
             if ui.button("Add New Note").clicked() {
@@ -33,7 +31,7 @@ impl eframe::App for NoteApp {
 
                 // 保存到数据库
                 let mut conn = self.state.db_conn.lock().unwrap();
-                notebook.save_to_db(&mut conn).expect("Failed to save note");
+                conn.save_notebook(&notebook).expect("Failed to save note");
             }
 
         });
