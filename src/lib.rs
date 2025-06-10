@@ -10,3 +10,5 @@ pub use ui::app::NoteApp;
 
 pub mod utils;
 pub use utils::i18n;
+
+pub mod markdown;

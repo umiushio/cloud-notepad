@@ -41,7 +41,12 @@ impl Language {
     }
 }
 
-pub fn t(key: &str, lang: Language) -> String {
+/// 翻译特征，用于UI组件
+pub trait Translate {
+    fn t(&self, key: &str) -> String;
+}
+
+pub(crate) fn t(key: &str, lang: Language) -> String {
     LOCALES
         .get(lang.code())
         .and_then(|loc| loc.ui.get(key))

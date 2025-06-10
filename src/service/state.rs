@@ -136,9 +136,10 @@ impl AppState {
             Ok(())
         }
     }
+}
 
-    /// 文本转换
-    pub fn t(&self, key: &str) -> String {
+impl Translate for AppState {
+    fn t(&self, key: &str) -> String {
         i18n::t(key, self.current_language)
     }
 }

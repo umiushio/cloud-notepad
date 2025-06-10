@@ -33,10 +33,13 @@ impl MainWindow {
         
         // 编辑页面
         egui::CentralPanel::default().show(ctx, |ui| {
-            if state.current_note_id.is_none() {
-                ui.label(&state.t("please select a note from the sidebar or create a new note"));
+            if let Some(mut note) = state.current_note() {
+                self.editor.show(ui, &mut note, state);
+                if let Err(e) = state.update_note(note) {
+                    eprintln!("更新笔记失败: {}", e);
+                }
             } else {
-                self.editor.show(ui, state);
+                ui.label(&state.t("please select a note from the sidebar or create a new note"));
             }
         });
     }

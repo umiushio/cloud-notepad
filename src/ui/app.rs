@@ -47,6 +47,12 @@ impl NoteApp {
             .or_default()
             .extend(vec!["source_han_sans".to_owned()]);
 
+        fonts
+            .families
+            .entry(FontFamily::Name("Bold".into()))
+            .or_default()
+            .insert(0, "source_han_sans".to_owned());
+
         ctx.set_fonts(fonts);
     }
 }
@@ -60,7 +66,7 @@ impl eframe::App for NoteApp {
             } 
         }
 
-        if ctx.input(|i| i.key_pressed(egui::Key::Delete)) {
+        if ctx.input(|i| i.key_pressed(egui::Key::Delete) && i.modifiers.alt) {
             if let Err(e) = self.state.delete_current_note() {
                 eprintln!("删除当前笔记失败: {}", e);
             }
