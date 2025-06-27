@@ -1,13 +1,14 @@
 use super::*;
+use super::text::TextNode;
 
 /// 标题节点
 pub(super) struct Header {
     level: u8,
-    content: Range<usize>,
+    content: TextNode,
 }
 
 impl Node for Header {
-    fn parse(input: &str, pos: usize) -> Option<ParseResult<Self>>
+    fn parse(input: &str, pos: usize) -> Option<ParseResult<Self>>  
             where Self: Sized {
         // 检查以 # 开头
         if input[pos..].starts_with('#') {
@@ -19,9 +20,11 @@ impl Node for Header {
                 .take_while(|&c| c == '#')
                 .count()
                 .min(6) as u8;
+            // 得到标题文本开始位置，需要忽略空白字符
+            let header_text_pos = pos + level as usize;
 
             return Some(ParseResult { 
-                node: Self { level, content: pos + level as usize..line_end }, 
+                node: Self { level, content: TextNode::parse(input, header_text_pos).unwrap().node }, 
                 end: line_end 
             });
         }
@@ -29,9 +32,8 @@ impl Node for Header {
         None
     }
 
-    fn render(&self, job: &mut LayoutJob, ctx: &RenderContext, front_width: f32) {
-        let _ = front_width;
-        let content = &ctx.text[self.content.clone()];
+    fn render(&self, job: &mut LayoutJob, config: &RenderConfig, ctx: Option<RenderContext>) {
+        let _ = ctx;
         let font_size = match self.level {
             1 => 24.0,
             2 => 22.0,
@@ -39,11 +41,6 @@ impl Node for Header {
             4 => 18.0,
             _ => 16.0,
         };
-        job.append(&content, 0.0, TextFormat { 
-            font_id: FontId::proportional(font_size), 
-            color: ctx.theme.header_color, 
-            underline: egui::Stroke::new(1.0, Color32::BLUE),
-            ..Default::default()
-        });
+        self.content.render(job, config, Some(RenderContext { front_width: 0.0, font_size }));
     }
 }

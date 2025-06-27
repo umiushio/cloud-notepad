@@ -1,10 +1,12 @@
-use super::*;
 use std::sync::Arc;
 use egui::{FontData, FontDefinitions, FontFamily};
+use crate::AppState;
+use crate::services::{SettingsService, Theme};
+use super::app_layout::AppLayout;
 
 pub struct NoteApp {
     state: AppState,
-    main_window: MainWindow,
+    layout: AppLayout,
 }
 
 impl NoteApp {
@@ -12,8 +14,9 @@ impl NoteApp {
         let state = AppState::new()?;
 
         // 设置初始主题
-        if state.dark_mode {
-            cc.egui_ctx.set_visuals(egui::Visuals::dark());
+        match state.theme() {
+            Theme::Dark => cc.egui_ctx.set_visuals(egui::Visuals::dark()),
+            _ => ()
         }
 
         // 设置字体
@@ -21,17 +24,23 @@ impl NoteApp {
 
         Ok(Self {
             state,
-            main_window: MainWindow::default(),
+            layout: AppLayout::new(),
         })
     }
 
     fn setup_fonts(ctx: &egui::Context) {
         let mut fonts = FontDefinitions::default();
-
-        // 添加其他语言字体
+        
+        // 添加常规字体
         fonts.font_data.insert(
-            "source_han_sans".to_owned(), 
-            Arc::new(FontData::from_static(include_bytes!("../../assets/fonts/SourceHanSans-VF.otf.ttc")))
+            "source_han_sans_regular".to_owned(),
+            Arc::new(FontData::from_static(include_bytes!("../../assets/fonts/SourceHanSans-Regular.ttc"))),
+        );
+
+        // 添加粗体字体
+        fonts.font_data.insert(
+            "source_han_sans_bold".to_owned(),
+            Arc::new(FontData::from_static(include_bytes!("../../assets/fonts/SourceHanSans-Bold.ttc"))),
         );
 
         // 修改字体族配置
@@ -39,19 +48,19 @@ impl NoteApp {
             .families
             .entry(egui::FontFamily::Proportional)
             .or_default()
-            .insert(0, "source_han_sans".to_owned());
+            .insert(0, "source_han_sans_regular".to_owned());
 
         fonts
             .families
             .entry(FontFamily::Monospace)
             .or_default()
-            .extend(vec!["source_han_sans".to_owned()]);
+            .extend(vec!["source_han_sans_regular".to_owned()]);
 
         fonts
             .families
             .entry(FontFamily::Name("Bold".into()))
             .or_default()
-            .insert(0, "source_han_sans".to_owned());
+            .insert(0, "source_han_sans_bold".to_owned());
 
         ctx.set_fonts(fonts);
     }
@@ -59,27 +68,14 @@ impl NoteApp {
 
 impl eframe::App for NoteApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        // 处理快捷键
-        if ctx.input(|i| i.key_pressed(egui::Key::S) && i.modifiers.ctrl) {
-            if let Err(e) = self.state.save_all_note() {
-                eprintln!("保存全部笔记失败: {}", e);
-            } 
-        }
+        self.layout.show(ctx, &mut self.state);
 
-        if ctx.input(|i| i.key_pressed(egui::Key::Delete) && i.modifiers.alt) {
-            if let Err(e) = self.state.delete_current_note() {
-                eprintln!("删除当前笔记失败: {}", e);
-            }
-        }
-        
-        self.main_window.show(ctx, &mut self.state);
-
-        // 自动保存检查
-        if self.state.current_note_is_modified() {
-            if let Err(e) = self.state.save_current_note() {
-                eprintln!("自动保存失败: {}", e);
-            }
-        }
+        // // 自动保存检查
+        // if self.state.current_note_is_modified() {
+        //     if let Err(e) = self.state.save_current_note() {
+        //         eprintln!("自动保存失败: {}", e);
+        //     }
+        // }
     }
 
     // fn on_close_event(&mut self) -> bool {

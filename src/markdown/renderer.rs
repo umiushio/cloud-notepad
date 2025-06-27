@@ -1,4 +1,4 @@
-use super::{Node, Theme, RenderContext, nodes::parse_node};
+use super::{Node, Theme, RenderConfig, nodes::parse_node};
 use egui::text::LayoutJob;
 
 /// Markdown渲染器
@@ -28,20 +28,16 @@ impl<'a> MarkdownRenderer<'a> {
         }
     }
 
-    pub fn render(&mut self, cursor_pos: usize) -> LayoutJob {
+    pub fn render(&mut self, cursor_pos: Option<usize>) -> LayoutJob {
         // 先执行一遍解析
         self.parse();
 
         // 开始渲染
         let mut job = LayoutJob::default();
-        let ctx = RenderContext {
-            text: self.text,
-            cursor_pos,
-            theme: self.theme.clone(),
-        };
+        let config = RenderConfig::new(self.text, cursor_pos, self.theme.clone());
 
         for node in self.nodes.iter() {
-            node.render(&mut job, &ctx, 0.0);
+            node.render(&mut job, &config, None);
         }
 
         job

@@ -55,14 +55,15 @@ impl Node for CodeBlock {
         None
     }
     
-    fn render(&self, job: &mut LayoutJob, ctx: &RenderContext, front_width: f32) {
+    fn render(&self, job: &mut LayoutJob, config: &RenderConfig, ctx: Option<RenderContext>) {
+        let ctx = ctx.unwrap_or(RenderContext { front_width: 0.0, font_size: 13.0 });
         for (i, range) in self.content.iter().enumerate() {
-            let line = &ctx.text[range.clone()];
-            let leading_space = if i == 0 { 0.0 } else { front_width };
+            let line = &config.text[range.clone()];
+            let leading_space = if i == 0 { 0.0 } else { ctx.front_width };
             job.append(line, leading_space, TextFormat {
-                font_id: FontId::monospace(13.0),
-                color: ctx.theme.code_color,
-                background: ctx.theme.code_bg_color,
+                font_id: FontId::monospace(ctx.font_size),
+                color: config.theme.code_color,
+                background: config.theme.code_bg_color,
                 ..Default::default()
             });
         }

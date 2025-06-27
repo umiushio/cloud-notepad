@@ -7,6 +7,12 @@ pub(super) struct ParseResult<N> {
     pub end: usize,
 }
 
+#[derive(Debug, Clone)]
+pub(super) struct RenderContext {
+    front_width: f32,
+    font_size: f32,
+}
+
 /// Markdown 节点 trait
 pub(super) trait Node {
     /// 解析原始文本生成节点
@@ -14,7 +20,7 @@ pub(super) trait Node {
         where Self: Sized;
     
     /// 渲染节点为布局任务
-    fn render(&self, job: &mut LayoutJob, ctx: &RenderContext, front_width: f32);
+    fn render(&self, job: &mut LayoutJob, config: &RenderConfig, ctx: Option<RenderContext>);
 
 //    /// 返回节点包含的文本范围 
 //     fn range(&self) -> Range<usize>;

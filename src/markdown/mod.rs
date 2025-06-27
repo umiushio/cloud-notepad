@@ -5,10 +5,24 @@ pub mod renderer;
 use nodes::Node;
 
 /// 渲染上下文
-struct RenderContext<'a> {
-    pub text: &'a str,
-    pub cursor_pos: usize,
-    pub theme: Theme,
+struct RenderConfig<'a> {
+    text: &'a str,
+    cursor_pos: Option<usize>,
+    theme: Theme,
+}
+
+impl<'a> RenderConfig<'a> {
+    pub fn new(text: &'a str, cursor_pos: Option<usize>, theme: Theme) -> Self {
+        Self { text, cursor_pos, theme }
+    }
+
+    pub fn belong_to(&self, range: &std::ops::Range<usize>) -> bool {
+        if let Some(pos) = self.cursor_pos {
+            range.contains(&pos)
+        } else {
+            false
+        }
+    }
 }
 
 /// 主题

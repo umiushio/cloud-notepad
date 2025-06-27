@@ -35,7 +35,7 @@ impl Node for ListNode {
         None
     }
 
-    fn render(&self, job: &mut LayoutJob, ctx: &RenderContext, front_width: f32) {
+    fn render(&self, job: &mut LayoutJob, config: &RenderConfig, ctx: Option<RenderContext>) {
         
     }
 

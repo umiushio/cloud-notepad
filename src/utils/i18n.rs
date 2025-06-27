@@ -24,7 +24,7 @@ pub fn load_locales() -> anyhow::Result<HashMap<&'static str, LocaleText>> {
 
 static LOCALES: Lazy<HashMap<&'static str, LocaleText>> = Lazy::new(|| load_locales().unwrap());
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Language {
     English,
     Chinese,

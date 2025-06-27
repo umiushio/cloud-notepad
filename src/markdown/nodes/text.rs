@@ -67,7 +67,7 @@ impl Node for TextSegment {
             let re = regex::Regex::new(format!(r"\S+{}", regex::escape(&remaining[..1])).as_str()).unwrap();
             if let Some(mat) = re.find(&remaining[1..]) {
                 return Some(ParseResult {
-                    node: Self::Bold(pos+1..pos+mat.end()),
+                    node: Self::Italic(pos+1..pos+mat.end()),
                     end: pos+1+mat.end(),
                 });
             }
@@ -98,58 +98,59 @@ impl Node for TextSegment {
         })
     }
 
-    fn render(&self, job: &mut LayoutJob, ctx: &RenderContext, front_width: f32) {
-        let _ = front_width;
+    fn render(&self, job: &mut LayoutJob, config: &RenderConfig, ctx: Option<RenderContext>) {
+        let ctx = ctx.unwrap_or(RenderContext { font_size: 14.0, front_width: 0.0 });
         match self {
             Self::Plain(range) => {
-                let content = &ctx.text[range.clone()];
+                let content = &config.text[range.clone()];
                 job.append(content, 0.0, TextFormat::simple(
-                    FontId::proportional(14.0), 
-                    if range.contains(&ctx.cursor_pos) { Color32::WHITE } else { ctx.theme.text_color }
+                    FontId::proportional(ctx.font_size), 
+                    if config.belong_to(range) { Color32::WHITE } else { config.theme.text_color }
                 ));
             }
             Self::Bold(range) => {
-                let content = &ctx.text[range.clone()];
+                let content = &config.text[range.clone()];
                 job.append(content, 0.0, TextFormat {
-                    font_id: FontId::new(14.0, FontFamily::Name("Bold".into())),
-                    color: if range.contains(&ctx.cursor_pos) { Color32::WHITE } else { ctx.theme.bold_color },
+                    font_id: FontId::new(ctx.font_size, FontFamily::Name("Bold".into())),
+                    color: if config.belong_to(range) { Color32::WHITE } else { config.theme.bold_color },
+                    
                     ..Default::default()
                 });
             }
             Self::Italic(range) => {
-                let content = &ctx.text[range.clone()];
+                let content = &config.text[range.clone()];
                 job.append(content, 0.0, TextFormat {
-                    font_id: FontId::proportional(14.0),
-                    color: if range.contains(&ctx.cursor_pos) { Color32::WHITE } else { ctx.theme.text_color },
+                    font_id: FontId::proportional(ctx.font_size),
+                    color: if config.belong_to(range) { Color32::WHITE } else { config.theme.text_color },
                     italics: true,
                     ..Default::default()
                 });
             }
             Self::Underline(range) => {
-                let content = &ctx.text[range.clone()];
+                let content = &config.text[range.clone()];
                 job.append(content, 0.0, TextFormat {
-                    font_id: FontId::proportional(14.0),
-                    color: if range.contains(&ctx.cursor_pos) { Color32::WHITE } else { ctx.theme.text_color },
-                    underline: egui::Stroke::new(1.0, ctx.theme.underline_color),
+                    font_id: FontId::proportional(ctx.font_size),
+                    color: if config.belong_to(range) { Color32::WHITE } else { config.theme.text_color },
+                    underline: egui::Stroke::new(1.0, config.theme.underline_color),
                     ..Default::default()
                 });
             }
             Self::Code(range) => {
-                let content = &ctx.text[range.clone()];
+                let content = &config.text[range.clone()];
                 job.append(content, 0.0, TextFormat {
-                    font_id: FontId::monospace(13.0),
-                    color: if range.contains(&ctx.cursor_pos) { Color32::WHITE } else { ctx.theme.code_color },
-                    background: ctx.theme.code_bg_color,
+                    font_id: FontId::monospace(ctx.font_size - 1.0),
+                    color: if config.belong_to(range) { Color32::WHITE } else { config.theme.code_color },
+                    background: config.theme.code_bg_color,
                     ..Default::default()
                 });
             }
 
             Self::Link { text: text_range, url: _ } => {
-                let content = &ctx.text[text_range.clone()];
+                let content = &config.text[text_range.clone()];
                 job.append(content, 0.0, TextFormat {
-                    font_id: FontId::proportional(14.0),
-                    color: if text_range.contains(&ctx.cursor_pos) { Color32::WHITE } else { ctx.theme.link_color },
-                    underline: egui::Stroke::new(1.0, ctx.theme.link_underline_color),
+                    font_id: FontId::proportional(ctx.font_size),
+                    color: if config.belong_to(text_range) { Color32::WHITE } else { config.theme.link_color },
+                    underline: egui::Stroke::new(1.0, config.theme.link_underline_color),
                     ..Default::default()
                 });
             }
@@ -187,10 +188,9 @@ impl Node for TextNode {
         })
     }
 
-    fn render(&self, job: &mut egui::text::LayoutJob, ctx: &RenderContext, front_width: f32) {
-        let _ = front_width;
+    fn render(&self, job: &mut egui::text::LayoutJob, config: &RenderConfig, ctx: Option<RenderContext>) {
         for segment in self.segments.iter() {
-            segment.render(job, ctx, 0.0);
+            segment.render(job, config, ctx.clone());
         }
     }
 }
