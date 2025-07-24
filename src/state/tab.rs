@@ -1,7 +1,7 @@
 use crate::data::Note;
 use super::AppState;
 
-pub trait TabService {
+pub trait TabState {
     fn recent_notes(&self) -> Vec<&String>;
     fn current_note_id(&self) -> Option<&String>;
     fn current_note(&self) -> Option<Note>;
@@ -10,7 +10,7 @@ pub trait TabService {
     fn close_note(&mut self, note_id: &str);
 }
 
-impl TabService for AppState {
+impl TabState for AppState {
     fn recent_notes(&self) -> Vec<&String> {
         self.recent_notes.get_visible_tabs()
     }

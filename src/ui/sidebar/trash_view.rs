@@ -1,4 +1,4 @@
-use crate::{i18n::Translate, data::DeleteNote, services::TrashService};
+use crate::{i18n::Translate, data::DeleteNote, state::TrashState};
 
 /// 标签列表视图
 #[derive(Default)]
@@ -8,7 +8,7 @@ pub(super) struct TrashView {
 }
 
 impl TrashView {
-    pub fn show<T: TrashService + Translate>(&mut self, ui: &mut egui::Ui, state: &mut T) {
+    pub fn show<T: TrashState + Translate>(&mut self, ui: &mut egui::Ui, state: &mut T) {
         self.deleted_notes = state.get_deleted_notes().unwrap();
 
         ui.vertical(|ui| {

@@ -46,6 +46,12 @@ impl Notebook {
         self.notes.get(note_id).cloned()
     }
 
+    pub fn find_notes_by_title(&self, title: &str) -> Vec<&Note> {
+        self.notes.values()
+            .filter(|note| note.title.contains(title))
+            .collect()
+    }
+
     /// 获取所有标签以及使用计数
     pub fn get_tags_with_count(&self) -> HashMap<String, usize> {
         self.tags.clone()

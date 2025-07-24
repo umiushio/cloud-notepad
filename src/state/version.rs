@@ -1,15 +1,15 @@
 use crate::data::{Note, NoteVersion};
 use super::AppState;
-use super::NoteService;
+use super::NoteState;
 
-pub trait VersionService {
+pub trait VersionState {
     fn list_versions(&self, note_id: &str) -> anyhow::Result<Vec<NoteVersion>>;
     fn save_version(&mut self, comment: &str, note: &Note) -> anyhow::Result<()>;
     fn restore_version(&mut self, note_version: &NoteVersion) -> anyhow::Result<()>;
     fn delete_version(&mut self, version_id: &str) -> anyhow::Result<()>;
 }
 
-impl VersionService for AppState {
+impl VersionState for AppState {
     fn list_versions(&self, note_id: &str) -> anyhow::Result<Vec<NoteVersion>> {
         let conn = self.db_conn.lock().unwrap();
         let note_versions = conn.load_version_history(note_id)?;
@@ -26,8 +26,7 @@ impl VersionService for AppState {
     fn restore_version(&mut self, note_version: &NoteVersion) -> anyhow::Result<()> {
         if let Some(mut note) = self.get_note(note_version.note_id()) {
             note.updated_by_note_version(note_version);
-            let mut notebook = self.notebook.lock().unwrap();
-            notebook.insert_or_replace_note(note);
+            self.update_note(note)?;
         }
         Ok(())
     }

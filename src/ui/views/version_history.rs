@@ -1,6 +1,6 @@
 use crate::{
     data::NoteVersion,
-    services::VersionService,
+    state::VersionState,
     i18n::Translate,
 };
 
@@ -15,9 +15,9 @@ pub struct VersionHistoryView {
 }
 
 impl VersionHistoryView {
-    pub fn show<T: VersionService + Translate>(&mut self, ctx: &egui::Context, service: &mut T) -> bool {
+    pub fn show<T: VersionState + Translate>(&mut self, ctx: &egui::Context, state: &mut T) -> bool {
         if !self.is_open || self.selected_note_id.is_none() { return false; }
-        self.versions = service.list_versions(self.selected_note_id.as_ref().unwrap()).unwrap();
+        self.versions = state.list_versions(self.selected_note_id.as_ref().unwrap()).unwrap();
 
         egui::Window::new("Version Histroy")
             .open(&mut self.is_open)
@@ -56,14 +56,14 @@ impl VersionHistoryView {
                             ui.separator();
                             ui.horizontal(|ui| {
                                 if let Some(idx) = self.selected_version {
-                                    if ui.button(service.t("restore this version")).clicked() {
-                                        if let Err(e) = service.restore_version(&self.versions[idx]) {
+                                    if ui.button(state.t("restore this version")).clicked() {
+                                        if let Err(e) = state.restore_version(&self.versions[idx]) {
                                             eprintln!("重载版本失败: {}", e);
                                         }
                                     }
 
-                                    if ui.button(service.t("delete this version")).clicked() {
-                                        if let Err(e) = service.delete_version(self.versions[idx].id()) {
+                                    if ui.button(state.t("delete this version")).clicked() {
+                                        if let Err(e) = state.delete_version(self.versions[idx].id()) {
                                             eprintln!("删除版本失败: {}", e);
                                         }
                                     }
@@ -84,9 +84,9 @@ impl VersionHistoryView {
                                 ui.separator();
                                 ui.label(&self.preview_content);
                             } else if self.versions.is_empty() {
-                                ui.label(service.t("no version has been saved"));
+                                ui.label(state.t("no version has been saved"));
                             } else {
-                                ui.label(service.t("select a version to preview"));
+                                ui.label(state.t("select a version to preview"));
                             }
                         });
                     });

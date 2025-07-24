@@ -27,7 +27,7 @@ impl SinglelineDialog {
         self.input = text.to_string();
     }
 
-    pub fn show<T: Translate>(&mut self, ctx: &egui::Context, service: &T) -> Option<String> {
+    pub fn show<T: Translate>(&mut self, ctx: &egui::Context, state: &T) -> Option<String> {
         if !self.is_open {
             return None;
         }
@@ -35,34 +35,32 @@ impl SinglelineDialog {
         let mut result = None;
         let mut is_open = true;
 
-        egui::Window::new(service.t(&self.title))
+        egui::Window::new(state.t(&self.title))
             .open(&mut is_open)
             .collapsible(false)
             .resizable(false)
             .show(ctx, |ui| {
-                ui.label(service.t(&self.label_text));
+                ui.label(state.t(&self.label_text));
 
                 // 文本输入框
                 let text_edit = egui::TextEdit::singleline(&mut self.input)
-                    .hint_text(service.t(&self.hint_text));
+                    .hint_text(state.t(&self.hint_text));
 
                 let response = ui.add(text_edit);
 
                 // 显示验证错误（如果有）
                 if let Some(err) = &self.validation_error {
-                    ui.colored_label(egui::Color32::RED, service.t(err));
+                    ui.colored_label(egui::Color32::RED, state.t(err));
                 }
 
                 ui.horizontal(|ui| {
                     // 取消按钮
-                    if ui.button(service.t("cancel")).clicked() {
+                    if ui.button(state.t("cancel")).clicked() {
                         self.is_open = false;
-                        self.input.clear();
-                        self.validation_error = None;
                     }
 
                     // 确认按钮
-                    if ui.button(service.t("save")).clicked() 
+                    if ui.button(state.t("save")).clicked() 
                         || response.lost_focus() 
                         && ui.input(|i| i.key_pressed(egui::Key::Enter))
                     {

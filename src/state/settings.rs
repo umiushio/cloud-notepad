@@ -1,7 +1,7 @@
 use crate::{i18n::Language, io::{ExportConfig, ImportConfig}};
 use super::{AppState, Theme};
 
-pub trait SettingsService {
+pub trait SettingsState {
     fn language(&self) -> Language;
     fn language_mut(&mut self) -> &mut Language;
     fn theme(&self) -> Theme;
@@ -11,7 +11,7 @@ pub trait SettingsService {
     fn import_config_mut(&mut self) -> &mut ImportConfig;
 }
 
-impl SettingsService for AppState {
+impl SettingsState for AppState {
     fn language(&self) -> Language {
         self.language
     }

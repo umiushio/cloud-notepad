@@ -1,5 +1,5 @@
 use crate::{
-    services::{NoteService, TabService}, 
+    state::{NoteState, TabState}, 
     i18n::Translate,
 };
 
@@ -10,7 +10,7 @@ pub(super) struct NotesView {
 }
 
 impl NotesView {
-    pub fn show<T: NoteService + TabService + Translate>(&mut self, ui: &mut egui::Ui, state: &mut T) {
+    pub fn show<T: NoteState + TabState + Translate>(&mut self, ui: &mut egui::Ui, state: &mut T) {
         ui.vertical(|ui| {
             ui.label(state.t("note list"));
             ui.text_edit_singleline(&mut self.filter);

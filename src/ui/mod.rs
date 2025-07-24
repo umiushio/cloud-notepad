@@ -5,5 +5,5 @@ pub mod editor;
 pub mod navigation_bar;
 pub mod sidebar;
 pub mod status_bar;
-pub mod version_history_view;
 pub mod dialogs;
+pub mod views;

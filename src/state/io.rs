@@ -2,10 +2,11 @@ use std::path::Path;
 use anyhow::Result;
 use crate::data::{Note, ExportNote};
 use crate::io::{ExportConfig, Exporter, ImportConfig, ImportResult, Importer, MergeStrategy};
+use crate::state::SyncState;
 use super::AppState;
-use super::NoteService;
+use super::NoteState;
 
-pub trait IoService {
+pub trait IoState {
     fn export_config(&self) -> &ExportConfig;
     fn import_config(&self) -> &ImportConfig;
     // 导出笔记
@@ -16,7 +17,7 @@ pub trait IoService {
     fn import(&mut self, input_path: &Path) -> Result<usize>;
 }
 
-impl IoService for AppState {
+impl IoState for AppState {
     fn export_config(&self) -> &ExportConfig {
         &self.export_config
     }
@@ -57,7 +58,7 @@ impl AppState {
     fn save_imported_notes(&mut self, results: Vec<ImportResult>) -> Result<usize> {
         let mut count = 0;
         for result in results.iter() {
-            let note = result.note().to_note();
+            let note = result.note().to_note(&self.user_id);
             if let Err(e) = self.save_imported_note(&note) {
                 eprintln!("Failed to import note: {}", e);
             } else {
@@ -85,7 +86,9 @@ impl AppState {
         self.save_note(&note)?;
         // 再更新内存中笔记信息
         let mut notebook = self.notebook.lock().unwrap();
-        notebook.insert_or_replace_note(note);
+        notebook.insert_or_replace_note(note.clone());
+        // 最后云端推送
+        self.cloud_import_note(&note)?;
         Ok(())
     }
 }

@@ -1,6 +1,6 @@
-use super::{menu_bar::MenuBar, navigation_bar::NavigationBar, sidebar::Sidebar, editor::EditorPanel, status_bar::StatusBar, version_history_view::VersionHistoryView};
-use crate::AppState;
-use crate::services::TabService;
+use super::{menu_bar::MenuBar, navigation_bar::NavigationBar, sidebar::Sidebar, editor::EditorPanel, status_bar::StatusBar, views::{VersionHistoryView, LogView}};
+use crate::{state::log::LogState, AppState};
+use crate::state::TabState;
 
 pub struct AppLayout {
     menu_bar: MenuBar,
@@ -9,8 +9,9 @@ pub struct AppLayout {
     editor: EditorPanel,
     status_bar: StatusBar,
 
-    show_view: Option<ShowView>,
+    show_view: ShowView,
     version_history: VersionHistoryView,
+    logs: LogView,
 }
 
 impl AppLayout {
@@ -21,16 +22,17 @@ impl AppLayout {
             sidebar: Sidebar::new(),
             editor: EditorPanel::default(),
             status_bar: StatusBar::default(),
-            show_view: None,
+            show_view: ShowView::default(),
             version_history: VersionHistoryView::default(),
+            logs: LogView::new(),
         }
     }
 
     pub fn show(&mut self, ctx: &egui::Context, state: &mut AppState) {
         // 顶部菜单栏
         egui::TopBottomPanel::top("menu_bar").show(ctx, |ui| {
-            if let Some(view) = self.menu_bar.show(ui, state) {
-                self.show_view = Some(view);
+            if let Some(show_view) = self.menu_bar.show(ui, state) {
+                self.show_view = show_view;
             }
         });
 
@@ -60,21 +62,26 @@ impl AppLayout {
         });
 
         // 显示版本历史窗口
-        if let Some(show_view) = &self.show_view {
-            match show_view {
-                ShowView::ShowVersionHistory => {
-                    self.version_history.open(state.current_note_id().cloned());
-                    if !self.version_history.show(ctx, state) {
-                        self.show_view = None;
-                    }
-                }
+        if self.show_view.show_version_history {
+            self.version_history.open(state.current_note_id().cloned());
+            if !self.version_history.show(ctx, state) {
+                self.show_view.show_version_history = false;
             }
         }
+        // 显示日志窗口
+        if self.show_view.show_logs {
+            self.logs.update_logs(state.get_logs());
+            if !self.logs.show(ctx) {
+                self.show_view.show_logs = false;
+            }
+        }
+
     }
 }
 
 // 显示视图
-pub enum ShowView {
-    ShowVersionHistory,
-    // 其他动作...
+#[derive(Default)]
+pub struct ShowView {
+    pub show_version_history: bool,
+    pub show_logs: bool,
 }

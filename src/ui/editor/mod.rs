@@ -8,7 +8,7 @@ use header::EditorHeader;
 use body::EditorBody;
 use super::dialogs::singleline_dialog::SinglelineDialog;
 
-use crate::{services::{NoteService, TabService, VersionService}, i18n::Translate};
+use crate::{state::{NoteState, TabState, VersionState}, i18n::Translate};
 
 pub struct EditorPanel {
     tabs: EditorTabs,
@@ -34,19 +34,19 @@ impl Default for EditorPanel {
 }
 
 impl EditorPanel {
-    pub fn show<T>(&mut self, ui: &mut egui::Ui, service: &mut T) 
-        where T: NoteService + TabService + VersionService + Translate {
-        if let Some(mut note) = service.current_note() {
+    pub fn show<T>(&mut self, ui: &mut egui::Ui, state: &mut T) 
+        where T: NoteState + TabState + VersionState + Translate {
+        if let Some(mut note) = state.current_note() {
             // 检测快捷键
             self.check_shortcut(ui.ctx());
             // 显示编辑区
             let mut flag = false;
             ui.vertical(|ui| {
                 // 笔记页签栏 + 工具栏
-                self.tabs.show(ui, service);
+                self.tabs.show(ui, state);
 
                 // 标题和标签编辑区
-                flag |= self.header.show(ui, &mut note, service); 
+                flag |= self.header.show(ui, &mut note, state); 
 
                 // 编辑/预览区域
                 flag |= self.body.show(
@@ -57,19 +57,19 @@ impl EditorPanel {
                 );
             });
             if flag {
-                if let Err(e) = service.update_note(note.clone()) {
+                if let Err(e) = state.update_note(note.clone()) {
                     eprintln!("更新笔记失败: {}", e);
                     // 可以在这里添加错误提示到UI
                     ui.label(egui::RichText::new("Failed to delete!").color(egui::Color32::RED));
                 }
             }
-            if let Some(comment) = self.save_version_dialog.show(ui.ctx(), service) {
-                if let Err(e) = service.save_version(&comment, &note) {
+            if let Some(comment) = self.save_version_dialog.show(ui.ctx(), state) {
+                if let Err(e) = state.save_version(&comment, &note) {
                     eprintln!("保存版本失败: {}", e);
                 }
             }
         } else {
-            ui.label(service.t("please select a note from the sidebar or create a new note"));
+            ui.label(state.t("please select a note from the sidebar or create a new note"));
         }
     }
 

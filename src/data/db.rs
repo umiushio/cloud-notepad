@@ -1,5 +1,6 @@
 use rusqlite::{Connection, Result, Transaction};
 use chrono::{DateTime, Utc};
+
 use super::{Note, DeleteNote, NoteVersion, Notebook};
 
 pub struct Database {
@@ -13,13 +14,14 @@ impl Database {
         connection.execute(
             "CREATE TABLE IF NOT EXISTS notes (
                 id TEXT PRIMARY KEY,
+                user_id TEXT,
                 title TEXT NOT NULL,
                 content TEXT NOT NULL,
                 tags TEXT,
                 created_at TEXT NOT NULL,
                 updated_at TEXT NOT NULL,
                 is_deleted BOOLEAN DEFAULT FALSE,
-                is_pinned BOOLEAN DEFAULT FALSE
+                is_synced BOOLEAN DEFAULT FALSE
             )",
             [],
         )?;
@@ -38,25 +40,35 @@ impl Database {
             )", 
             [],
         )?;
+
         Ok( Self { connection } )
     } 
 
+    pub fn get_user_by_note(&self, note_id: &str) -> Result<String> {
+        let mut stmt = self.connection.prepare(
+            "SELECT user_id FROM notes WHERE note_id = ?1"
+        )?;
+        stmt.query_one([note_id], |row| {
+            Ok(row.get(0)?)
+        })
+    }
+
     fn load_note(&self, id: &str) -> Result<Option<Note>> {
         let mut stmt = self.connection.prepare(
-            "SELECT id, title, content, tags, created_at, updated_at, is_pinned FROM notes
+            "SELECT id, user_id, title, content, tags, created_at, updated_at FROM notes
             WHERE id = ?1"
         )?;
         let mut note_iter = stmt.query_map([id], |row| {
             Ok(Note {
                 id: row.get(0)?,
-                title: row.get(1)?,
-                content: row.get(2)?,
-                tags: serde_json::from_str(&row.get::<_, String>(3)?).unwrap_or_default(),
-                created_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(4)?)
+                user_id: row.get(1)?,
+                title: row.get(2)?,
+                content: row.get(3)?,
+                tags: serde_json::from_str(&row.get::<_, String>(4)?).unwrap_or_default(),
+                created_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(5)?)
                     .unwrap().with_timezone(&Utc),
-                updated_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(5)?)
+                updated_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(6)?)
                     .unwrap().with_timezone(&Utc),
-                is_pinned: row.get(6)?,
             })
         })?;
 
@@ -68,22 +80,22 @@ impl Database {
 
     }
 
-    pub fn load_all_notes(&self) -> Result<Notebook> {
+    pub fn load_all_notes(&self, user_id: &str) -> Result<Notebook> {
         let mut stmt = self.connection.prepare(
-            "SELECT id, title, content, tags, created_at, updated_at, is_pinned FROM notes 
-            WHERE is_deleted = FALSE"
+            "SELECT id, user_id, title, content, tags, created_at, updated_at FROM notes 
+            WHERE is_deleted = FALSE AND user_id = ?1"
         )?;
-        let note_iter = stmt.query_map([], |row| {
+        let note_iter = stmt.query_map([user_id], |row| {
             Ok(Note {
                 id: row.get(0)?,
-                title: row.get(1)?,
-                content: row.get(2)?,
-                tags: serde_json::from_str(&row.get::<_, String>(3)?).unwrap_or_default(),
-                created_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(4)?)
+                user_id: row.get(1)?,
+                title: row.get(2)?,
+                content: row.get(3)?,
+                tags: serde_json::from_str(&row.get::<_, String>(4)?).unwrap_or_default(),
+                created_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(5)?)
                     .unwrap().with_timezone(&Utc),
-                updated_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(5)?)
+                updated_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(6)?)
                     .unwrap().with_timezone(&Utc),
-                is_pinned: row.get(6)?,
             })
         })?;
 
@@ -101,16 +113,17 @@ impl Database {
     ) -> Result<()> {
         tx.execute(
             "INSERT OR REPLACE INTO notes
-            (id, title, content, tags, created_at, updated_at, is_pinned)
-            VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)", 
+            (id, user_id, title, content, tags, created_at, updated_at, is_synced)
+            VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)", 
             rusqlite::params![
                 note.id,
+                note.user_id,
                 note.title,
                 note.content,
                 serde_json::to_string(&note.tags).unwrap(),
                 note.created_at.to_rfc3339(),
                 note.updated_at.to_rfc3339(),
-                note.is_pinned,
+                false,
             ]
         )?;
         Ok(())
@@ -130,11 +143,20 @@ impl Database {
         tx.commit()
     }
 
+    pub fn sync_note(&mut self, note_id: &str) -> Result<()> {
+        let tx = self.connection.transaction()?;
+        tx.execute(
+            "UPDATE notes SET is_synced = FALSE WHERE id = ?1", 
+            rusqlite::params![ note_id ],
+        )?;
+        tx.commit()
+    }
+
     // 软删除笔记 （移动到回收站）
     pub fn move_to_trash(&mut self, note_id: &str) -> Result<()> {
         let tx = self.connection.transaction()?;
         tx.execute(
-            "UPDATE notes SET is_deleted = TRUE, updated_at = ?1 WHERE id = ?2", 
+            "UPDATE notes SET is_deleted = TRUE, updated_at = ?1, is_synced = FALSE WHERE id = ?2", 
             rusqlite::params![ Utc::now().to_rfc3339(), note_id ],
         )?;
         tx.commit()

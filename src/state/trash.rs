@@ -1,8 +1,9 @@
 use crate::data::DeleteNote;
+use crate::state::SyncState;
 use super::AppState;
-use super::TabService;
+use super::TabState;
 
-pub trait TrashService {
+pub trait TrashState {
     fn move_to_trash(&mut self, note_id: &str) -> anyhow::Result<()>;
     fn restore_from_trash(&mut self, note_id: &str) -> anyhow::Result<()>;
     fn empty_trash(&mut self) -> anyhow::Result<()>;
@@ -10,7 +11,7 @@ pub trait TrashService {
     fn get_deleted_notes(&self) -> anyhow::Result<Vec<DeleteNote>>;
 }
 
-impl TrashService for AppState {
+impl TrashState for AppState {
     /// 删除指定笔记
     fn move_to_trash(&mut self, note_id: &str) -> anyhow::Result<()> {
         {
@@ -35,7 +36,10 @@ impl TrashService for AppState {
 
         // 再从内存中恢复
         let mut notebook = self.notebook.lock().unwrap();
-        notebook.insert_or_replace_note(note);
+        notebook.insert_or_replace_note(note.clone());
+
+        // 最后云端推送
+        self.cloud_import_note(&note)?;
         Ok(())
     }
 

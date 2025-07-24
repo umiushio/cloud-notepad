@@ -6,25 +6,25 @@ use super::note_version::NoteVersion;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Note {
     pub(in crate::data) id: String,             // UUID
+    pub(in crate::data) user_id: String,
     pub(in crate::data) title: String,
     pub(in crate::data) content: String,
     pub(in crate::data) tags: HashSet<String>,
     pub(in crate::data) created_at: DateTime<Utc>,
     pub(in crate::data) updated_at: DateTime<Utc>,
-    pub(in crate::data) is_pinned: bool,
 }
 
 impl Note {
-    pub fn new(title: String) -> Self {
+    pub fn new(title: &str, user_id: &str) -> Self {
         let now = Utc::now();
         Self {
             id: uuid::Uuid::new_v4().to_string(),
-            title,
+            user_id: user_id.to_string(),
+            title: title.to_string(),
             content: String::new(),
             tags: HashSet::new(),
             created_at: now,
             updated_at: now,
-            is_pinned: false,
         }
     }
 
@@ -55,7 +55,15 @@ impl Note {
         &self.tags
     }
 
-    pub fn updated_at(&self) -> String {
+    pub fn created_at(&self) -> DateTime<Utc> {
+        self.created_at
+    }
+
+    pub fn updated_at(&self) -> DateTime<Utc> {
+        self.updated_at
+    }
+
+    pub fn updated_at_as_str(&self) -> String {
         format!("{}", self.updated_at.with_timezone(&Local).format("%Y-%m-%d %H:%M"))
     }
 

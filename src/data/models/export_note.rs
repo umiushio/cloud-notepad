@@ -51,15 +51,15 @@ impl ExportNote {
         )
     }
 
-    pub fn to_note(&self) -> Note {
+    pub fn to_note(&self, user_id: &str) -> Note {
         Note {
             id: self.id.clone().unwrap_or(uuid::Uuid::new_v4().to_string()),
+            user_id: user_id.to_string(),
             title: self.title.clone(),
             content: self.content.clone(),
             tags: self.tags.clone(),
             created_at: self.created.unwrap_or(Utc::now()),
             updated_at: self.updated.unwrap_or(Utc::now()),
-            is_pinned: false,
         }
     }
 
